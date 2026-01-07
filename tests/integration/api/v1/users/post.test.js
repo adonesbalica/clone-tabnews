@@ -1,5 +1,7 @@
 import { version as uuidVersion } from "uuid";
 import orchestrator from "tests/orchestrator";
+import user from "models/user";
+import password from "models/password";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -28,7 +30,7 @@ describe("POST /api/v1/users", () => {
         id: responseBody.id,
         username: "felipedeschamps",
         email: "felipedeschamps@gmail.com",
-        password: "senhaSegura123",
+        password: responseBody.password,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -36,6 +38,19 @@ describe("POST /api/v1/users", () => {
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
+
+      const userInDatabase = await user.findOneByUsername("felipedeschamps");
+      const correctPasswordMatch = await password.compare(
+        "senhaSegura123",
+        userInDatabase.password,
+      );
+      expect(correctPasswordMatch).toBe(true);
+
+      const inCorrectPasswordMatch = await password.compare(
+        "senhaErrada",
+        userInDatabase.password,
+      );
+      expect(inCorrectPasswordMatch).toBe(false);
     });
     test("With duplicated 'email'", async () => {
       const response1 = await fetch("http://localhost:3000/api/v1/users", {
@@ -58,7 +73,7 @@ describe("POST /api/v1/users", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: "duplicatedUsername1",
+          username: "duplicatedUsername231",
           email: "duplicatedemail@gmail.com",
           password: "securePassword123",
         }),
@@ -67,6 +82,8 @@ describe("POST /api/v1/users", () => {
       expect(response2.status).toBe(400);
 
       const response2Body = await response2.json();
+
+      console.log(response2Body);
 
       expect(response2Body).toEqual({
         name: "ValidationError",
