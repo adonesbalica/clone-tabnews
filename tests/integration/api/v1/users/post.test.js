@@ -73,7 +73,7 @@ describe("POST /api/v1/users", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: "duplicatedUsername1",
+          username: "duplicatedUsername231",
           email: "duplicatedemail@gmail.com",
           password: "securePassword123",
         }),
@@ -82,6 +82,8 @@ describe("POST /api/v1/users", () => {
       expect(response2.status).toBe(400);
 
       const response2Body = await response2.json();
+
+      console.log(response2Body);
 
       expect(response2Body).toEqual({
         name: "ValidationError",
