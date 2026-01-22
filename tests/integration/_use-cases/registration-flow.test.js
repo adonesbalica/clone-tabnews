@@ -10,12 +10,13 @@ beforeAll(async () => {
   await orchestrator.deleteAllEmails();
 });
 
-describe("Use case: Registration flow (all sucessful)", () => {
+describe("Use case: Registration flow (all successful)", () => {
   let createUserResponseBody;
   let activationTokenId;
+  let createSessionsResponseBody;
 
   test("Create  user account", async () => {
-    const createUserReponse = await fetch(
+    const createUserResponse = await fetch(
       "http://localhost:3000/api/v1/users",
       {
         method: "POST",
@@ -28,9 +29,9 @@ describe("Use case: Registration flow (all sucessful)", () => {
       },
     );
 
-    expect(createUserReponse.status).toBe(201);
+    expect(createUserResponse.status).toBe(201);
 
-    createUserResponseBody = await createUserReponse.json();
+    createUserResponseBody = await createUserResponse.json();
 
     expect(createUserResponseBody).toEqual({
       id: createUserResponseBody.id,
@@ -79,15 +80,21 @@ describe("Use case: Registration flow (all sucessful)", () => {
     expect(Date.parse(activationResponseBody.used_at)).not.toBeNaN();
 
     const activatedUser = await user.findOneByUsername("RegistrationFlow");
-    expect(activatedUser.features).toEqual(["create:session"]);
+    expect(activatedUser.features).toEqual([
+      "create:session",
+      "read:session",
+      "update:user",
+    ]);
   });
 
   test("Login", async () => {
-    const createSessionsReponse = await fetch(
+    const createSessionsResponse = await fetch(
       "http://localhost:3000/api/v1/sessions",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           email: "registration.flow@curso.dev",
           password: "RegistrationFlowPassword",
@@ -95,6 +102,24 @@ describe("Use case: Registration flow (all sucessful)", () => {
       },
     );
 
-    expect(createSessionsReponse.status).toBe(201);
+    expect(createSessionsResponse.status).toBe(201);
+
+    createSessionsResponseBody = await createSessionsResponse.json();
+
+    expect(createSessionsResponseBody.user_id).toBe(createUserResponseBody.id);
+  });
+
+  test("Get user information", async () => {
+    const userResponse = await fetch("http://localhost:3000/api/v1/user", {
+      headers: {
+        Cookie: `session_id=${createSessionsResponseBody.token}`,
+      },
+    });
+
+    expect(userResponse.status).toBe(200);
+
+    const userResponseBody = await userResponse.json();
+
+    expect(userResponseBody.id).toBe(createUserResponseBody.id);
   });
 });

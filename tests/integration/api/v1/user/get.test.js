@@ -16,6 +16,8 @@ describe("GET /api/v1/user", () => {
         username: "UserWithValidSession",
       });
 
+      const activatedUser = await orchestrator.activateUser(createdUser);
+
       const sessionObject = await orchestrator.createSession(createdUser.id);
 
       const response = await fetch("http://localhost:3000/api/v1/user", {
@@ -38,9 +40,9 @@ describe("GET /api/v1/user", () => {
         username: "UserWithValidSession",
         email: createdUser.email,
         password: createdUser.password,
-        features: ["read:activation_token"],
+        features: ["create:session", "read:session", "update:user"],
         created_at: createdUser.created_at.toISOString(),
-        updated_at: createdUser.updated_at.toISOString(),
+        updated_at: activatedUser.updated_at.toISOString(),
       });
 
       expect(uuidVersion(responseBody.id)).toBe(4);
@@ -81,6 +83,8 @@ describe("GET /api/v1/user", () => {
         username: "UserWithHalfwayExpiredSession",
       });
 
+      const activatedUser = await orchestrator.activateUser(createdUser);
+
       const sessionObject = await orchestrator.createSession(createdUser.id);
 
       jest.useRealTimers();
@@ -100,9 +104,9 @@ describe("GET /api/v1/user", () => {
         username: "UserWithHalfwayExpiredSession",
         email: createdUser.email,
         password: createdUser.password,
-        features: ["read:activation_token"],
+        features: ["create:session", "read:session", "update:user"],
         created_at: createdUser.created_at.toISOString(),
-        updated_at: createdUser.updated_at.toISOString(),
+        updated_at: activatedUser.updated_at.toISOString(),
       });
 
       expect(uuidVersion(responseBody.id)).toBe(4);

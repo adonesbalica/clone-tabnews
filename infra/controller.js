@@ -9,6 +9,7 @@ import {
 import * as cookie from "cookie";
 import session from "models/session";
 import user from "models/user";
+import authorization from "models/authorization";
 
 function onNoMatchHandler(request, response) {
   const publicErrorObject = new MethodNotAllowedError();
@@ -96,13 +97,13 @@ function canRequest(feature) {
   return function canRequestMiddleware(request, response, next) {
     const userTryingRequest = request.context.user;
 
-    if (userTryingRequest.features.includes(feature)) {
+    if (authorization.can(userTryingRequest, feature)) {
       return next();
     }
 
     throw new ForbiddenError({
-      message: "Você não possui permissão para executar essa ação.",
-      action: `Verifique se seu usuário possui a feature ${feature}`,
+      message: "Você não possui permissão para executar esta ação.",
+      action: `Verifique se o seu usuário possui a feature "${feature}"`,
     });
   };
 }
