@@ -26,10 +26,8 @@ export default async function migrations(request, response) {
     };
 
     if (request.method === "GET") {
-      const penddingMigrations = await migrationRunner(
-        defaultMigrationsOptions
-      );
-      response.status(200).json(penddingMigrations);
+      const pendingMigrations = await migrationRunner(defaultMigrationsOptions);
+      response.status(200).json(pendingMigrations);
     }
 
     if (request.method === "POST") {
